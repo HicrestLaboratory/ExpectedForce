@@ -1,0 +1,45 @@
+Evaluating file ../input/google.txt
+316409287
+314001021
+315685131
+315681090
+315481372
+20000,1024,2,316390907
+Evaluating file ../input/google.txt
+Error!
+Last Error: cudaErrorMemoryAllocation
+Details: out of memory
+Evaluating file ../input/google.txt
+Error!
+Last Error: cudaErrorMemoryAllocation
+Details: out of memory
+Evaluating file ../input/google.txt
+316570437
+316232181
+317015712
+316703321
+316180723
+32768,1024,2,317479802
+Evaluating file ../input/google.txt
+Error!
+Last Error: cudaErrorMemoryAllocation
+Details: out of memory
+Evaluating file ../input/google.txt
+Error!
+Last Error: cudaErrorMemoryAllocation
+Details: out of memory
+Evaluating file ../input/google.txt
+319749707
+318470561
+318675776
+318991930
+316507611
+65536,1024,2,319418444
+Evaluating file ../input/google.txt
+Error!
+Last Error: cudaErrorMemoryAllocation
+Details: out of memory
+Evaluating file ../input/google.txt
+Error!
+Last Error: cudaErrorMemoryAllocation
+Details: out of memory

@@ -1,0 +1,63 @@
+Evaluating file ../input/fb-social-circles.txt
+2826278
+1919565
+1896552
+1903792
+1908278
+64,1024,2,3030220
+Evaluating file ../input/fb-social-circles.txt
+2829591
+1917124
+1907116
+1900715
+1895269
+64,1024,4,3029290
+Evaluating file ../input/fb-social-circles.txt
+2834233
+1907412
+1911764
+1931771
+1906371
+64,1024,8,3037637
+Evaluating file ../input/fb-social-circles.txt
+2833361
+1914544
+1891405
+1900788
+1887172
+128,1024,2,3024781
+Evaluating file ../input/fb-social-circles.txt
+2830997
+1915275
+1905606
+1907434
+1896864
+128,1024,4,3030562
+Evaluating file ../input/fb-social-circles.txt
+2837243
+1904715
+1912701
+1928034
+1904576
+128,1024,8,3036781
+Evaluating file ../input/fb-social-circles.txt
+2828110
+1913968
+1892638
+1900057
+1905090
+256,1024,2,3027300
+Evaluating file ../input/fb-social-circles.txt
+2835144
+1915373
+1908933
+1905411
+1897603
+256,1024,4,3031820
+Evaluating file ../input/fb-social-circles.txt
+2843512
+1916382
+1925568
+1916915
+1917109
+256,1024,8,3043224

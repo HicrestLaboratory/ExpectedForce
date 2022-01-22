@@ -1,0 +1,54 @@
+Evaluating file ../input/rmat-14-32.txt
+171522480
+170465141
+169941839
+169898022
+169930933
+15100,1024,2,171291010
+Evaluating file ../input/rmat-14-32.txt
+171953272
+169003617
+170118866
+169753699
+169423254
+15100,1024,4,170989869
+Evaluating file ../input/rmat-14-32.txt
+Error!
+Last Error: cudaErrorMemoryAllocation
+Details: out of memory
+Evaluating file ../input/rmat-14-32.txt
+171903855
+170081608
+169734783
+170068512
+169491642
+16384,1024,2,171195407
+Evaluating file ../input/rmat-14-32.txt
+172035806
+169125639
+169282650
+169528731
+169531971
+16384,1024,4,170840286
+Evaluating file ../input/rmat-14-32.txt
+Error!
+Last Error: cudaErrorMemoryAllocation
+Details: out of memory
+Evaluating file ../input/rmat-14-32.txt
+171595004
+168917788
+168681478
+169209515
+168806047
+32768,1024,2,170381293
+Evaluating file ../input/rmat-14-32.txt
+172545648
+170596969
+170833180
+170356116
+170262390
+32768,1024,4,171858188
+Evaluating file ../input/rmat-14-32.txt
+Error!
+Last Error: cudaErrorMemoryAllocation
+Details: out of memory
