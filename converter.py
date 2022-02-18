@@ -12,45 +12,52 @@ Graph Converter
 filename = "graph_to_convert.txt"
 
 
-graph = {}
-with open(filename) as f:
-    #search for 3D data
+mapping = {}
+with open(filename, delimiter = " ") as f:
     n = 0;
     inc = "!"
-    while (inc):
-        n += 1;
-        inc = f.readline();
-        reaction = f.readline();
-        out = f.readline();
-        if inc != out:
-            if not (inc in graph):
-                graph[inc] = [out,]
-            else:
-                graph[inc].append(out)
-            
-            if not (out in graph):
-                graph[out] = [inc,]
-            else:
-                graph[out].append(inc)
-            
+    for line in f:
+        linesplit = line.split(" ")
+        inc = int(linesplit[0]);
+        if inc not in mapping:
+            mapping[inc] = n;
+            n += 1;
+        out = int(linesplit[1]);
+        if out not in mapping:
+            mapping[out] = n;
+            n += 1;
 
 outfile = "mapping.txt"
-mapping = {}
-i = 0;
-
 with open(outfile, "w") as f:
-    for parent in graph:
-        mapping[parent] = i;
-        i+= 1;
-        f.writelines(str(i) + "  " + parent);
+    for node,id in mapping.items():
+        f.writeline(str(node) + " " + str(id))
+    
+graph = {}
+with open(filename, delimiter = " ") as f:
+    inc = "!"
+    for line in f:
+        linesplit = line.split(" ")
+        inc = mapping[int(linesplit[0])];
+        out = mapping[int(linesplit[1])];
+        if inc not in graph:
+            graph[inc] = [out,]
+        else:
+            if out not in graph[inc]:
+                graph[inc].append(out);
+        if out not in graph:
+            graph[out] = [inc,]
+        else:
+            if inc not in graph[out]:
+                graph[out].append(inc);
+    for parent, children in graph:
+        children.sort();
+
 
 outfile = "converted.txt"
 with open(outfile, "w") as f:
     for parent in graph:
-        i = mapping[parent];
-        for elem in graph[parent]:
-            j = mapping[elem]
-            f.writelines(str(i) + "  " + str(j) + "\n");
+        for child in graph[parent]:
+            f.writeline(str(parent) + "  " + str(child));
     
 
 
