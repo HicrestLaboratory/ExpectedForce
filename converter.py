@@ -19,7 +19,7 @@ if __name__ == "__main__":
     
     parser.add_argument("--input-file", default="fb_full.txt",
         help="file that contains the already run experiments")
-    parser.add_argument("--delimiter", default=" ",
+    parser.add_argument("--delimiter", default="  ",
         help="file that contains the already run experiments")
 
     args = parser.parse_args()
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     delimiter = args.delimiter;
 
 filename = "fb_full.txt"
-outfile = filename.split(".")[0] + "mapping.txt"
+mapping = filename.split(".")[0] + "mapping.txt"
 outfile = filename.split(".")[0] + "converted.txt"
 
 mapping = {}
@@ -46,7 +46,7 @@ with open(filename) as f:
             mapping[out] = n;
             n += 1;
 
-with open(outfile, "w") as f:
+with open(mapping, "w") as f:
     for node,id in mapping.items():
         f.writeline(str(node) + " " + str(id))
     
