@@ -30,8 +30,6 @@ if __name__ == "__main__":
 filename = "fb_full.txt"
 outfile = filename.split(".")[0] + "mapping.txt"
 outfile = filename.split(".")[0] + "converted.txt"
-delimiter = " ";
-
 
 mapping = {}
 with open(filename) as f:
