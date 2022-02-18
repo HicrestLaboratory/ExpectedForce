@@ -66,7 +66,7 @@ with open(input_file) as f:
         else:
             if inc not in graph[out]:
                 graph[out].append(inc);
-    for parent, children in graph:
+    for parent, children in graph.items():
         children.sort();
 
 
