@@ -27,12 +27,11 @@ if __name__ == "__main__":
     input_file = args.input_file;
     delimiter = args.delimiter;
 
-filename = "fb_full.txt"
-mapping = filename.split(".")[0] + "mapping.txt"
-outfile = filename.split(".")[0] + "converted.txt"
+mappingfile = input_file.split(".")[0] + "mapping.txt"
+outfile = input_file.split(".")[0] + "converted.txt"
 
 mapping = {}
-with open(filename) as f:
+with open(input_file) as f:
     n = 0;
     inc = "!"
     for line in f:
@@ -46,12 +45,12 @@ with open(filename) as f:
             mapping[out] = n;
             n += 1;
 
-with open(mapping, "w") as f:
+with open(mappingfile, "w") as f:
     for node,id in mapping.items():
         f.writeline(str(node) + " " + str(id))
     
 graph = {}
-with open(filename) as f:
+with open(input_file) as f:
     inc = "!"
     for line in f:
         linesplit = line.split(delimiter)
