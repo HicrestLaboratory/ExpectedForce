@@ -30,6 +30,7 @@ int read_snap_format(svi &egos, svi &alters,
 		}
 		
 		egos.push_back(stoi(temp)); //out node
+		cout << "added one edge to node " << last_node << endl;
 		
 		if(ignore_weights)
 		{
