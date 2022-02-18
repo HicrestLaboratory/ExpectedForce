@@ -18,17 +18,20 @@ if __name__ == "__main__":
         description="Converts graph to be run with Expected Force")
     
     parser.add_argument("--input-file", default="fb_full.txt",
-        help="file that contains the already run experiments")
+        help="input graph")
     parser.add_argument("--delimiter", default="  ",
-        help="file that contains the already run experiments")
+        help="delimiter between parent and children node")
+    parser.add_argument("--outname", default="test",
+        help="name and location of output (no file extension)")
 
     args = parser.parse_args()
 
     input_file = args.input_file;
     delimiter = args.delimiter;
+    outname = args.outname;
 
-mappingfile = input_file.split(".")[0] + "_mapping.txt"
-outfile = input_file.split(".")[0] + "_converted.txt"
+mappingfile = outname + "_mapping.txt"
+outfile = outname + "_converted.txt"
 
 mapping = {}
 with open(input_file) as f:
