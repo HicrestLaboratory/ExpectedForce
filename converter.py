@@ -12,13 +12,15 @@ Graph Converter
 filename = "fb_full.txt"
 outfile = filename.split(".")[0] + "mapping.txt"
 outfile = filename.split(".")[0] + "converted.txt"
+delimiter = " ";
+
 
 mapping = {}
-with open(filename, delimiter = " ") as f:
+with open(filename) as f:
     n = 0;
     inc = "!"
     for line in f:
-        linesplit = line.split(" ")
+        linesplit = line.split(delimiter)
         inc = int(linesplit[0]);
         if inc not in mapping:
             mapping[inc] = n;
@@ -33,10 +35,10 @@ with open(outfile, "w") as f:
         f.writeline(str(node) + " " + str(id))
     
 graph = {}
-with open(filename, delimiter = " ") as f:
+with open(filename) as f:
     inc = "!"
     for line in f:
-        linesplit = line.split(" ")
+        linesplit = line.split(delimiter)
         inc = mapping[int(linesplit[0])];
         out = mapping[int(linesplit[1])];
         if inc not in graph:
@@ -56,7 +58,7 @@ with open(filename, delimiter = " ") as f:
 with open(outfile, "w") as f:
     for parent in graph:
         for child in graph[parent]:
-            f.writeline(str(parent) + "  " + str(child));
+            f.writeline(str(parent) + " " + str(child));
     
 
 
