@@ -1,0 +1,45 @@
+Evaluating file ../input/rmat-14-64.txt
+542898340
+545207205
+545260763
+545338714
+545275524
+28000,1024,2,545735436
+Evaluating file ../input/rmat-14-64.txt
+Error!
+Last Error: cudaErrorMemoryAllocation
+Details: out of memory
+Evaluating file ../input/rmat-14-64.txt
+Error!
+Last Error: cudaErrorMemoryAllocation
+Details: out of memory
+Evaluating file ../input/rmat-14-64.txt
+543541402
+546063799
+544079113
+546024579
+546041999
+32768,1024,2,546089505
+Evaluating file ../input/rmat-14-64.txt
+Error!
+Last Error: cudaErrorMemoryAllocation
+Details: out of memory
+Evaluating file ../input/rmat-14-64.txt
+Error!
+Last Error: cudaErrorMemoryAllocation
+Details: out of memory
+Evaluating file ../input/rmat-14-64.txt
+544742620
+546574175
+546348091
+544678006
+546728279
+65536,1024,2,546753561
+Evaluating file ../input/rmat-14-64.txt
+Error!
+Last Error: cudaErrorMemoryAllocation
+Details: out of memory
+Evaluating file ../input/rmat-14-64.txt
+Error!
+Last Error: cudaErrorMemoryAllocation
+Details: out of memory

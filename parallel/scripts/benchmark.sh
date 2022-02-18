@@ -1,0 +1,10 @@
+./amazon_benchmark.sh
+./google_benchmark.sh
+./wiki_benchmark.sh
+./fb_circles_benchmark.sh
+./ca_network_benchmark.sh
+./twitter_benchmark.sh
+./rmat-s14-ef8_benchmark.sh
+./rmat-s14-ef16_benchmark.sh
+./rmat-s14-ef32_benchmark.sh
+./rmat-s14-ef64_benchmark.sh
