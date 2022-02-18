@@ -46,8 +46,8 @@ with open(input_file) as f:
             n += 1;
 
 with open(mappingfile, "w") as f:
-    for node,id in mapping.items():
-        f.writelines(str(node) + " " + str(id) + "\n")
+    for node,nodeid in mapping.items():
+        f.writelines(str(node) + " " + str(nodeid) + "\n")
     
 graph = {}
 with open(input_file) as f:
@@ -71,8 +71,8 @@ with open(input_file) as f:
 
 
 with open(outfile, "w") as f:
-    for parent,children in graph.items():
-        for child in children:
+    for parent in range(len(graph)):
+        for child in graph[parent]:
             f.writelines(str(parent) + " " + str(child) + "\n");
     
 
