@@ -71,8 +71,8 @@ with open(input_file) as f:
 
 
 with open(outfile, "w") as f:
-    for parent in graph.items():
-        for child in graph[parent]:
+    for parent,children in graph.items():
+        for child in children:
             f.writelines(str(parent) + " " + str(child));
     
 
