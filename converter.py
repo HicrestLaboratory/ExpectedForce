@@ -45,10 +45,13 @@ with open(input_file) as f:
             mapping[out] = n;
             n += 1;
 
+print(n, "Nodes found");
+
 with open(mappingfile, "w") as f:
     for node,nodeid in mapping.items():
         f.writelines(str(node) + " " + str(nodeid) + "\n")
     
+print("mapping saved in ", mappingfile)
 graph = {}
 with open(input_file) as f:
     inc = "!"
@@ -69,11 +72,12 @@ with open(input_file) as f:
     for parent, children in graph.items():
         children.sort();
 
-
 with open(outfile, "w") as f:
     for parent in range(len(graph)):
         for child in graph[parent]:
             f.writelines(str(parent) + " " + str(child) + "\n");
-    
+
+print("graph converted saved in ", outfile)
+
 
 
