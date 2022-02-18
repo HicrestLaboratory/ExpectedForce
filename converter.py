@@ -27,8 +27,8 @@ if __name__ == "__main__":
     input_file = args.input_file;
     delimiter = args.delimiter;
 
-mappingfile = input_file.split(".")[0] + "mapping.txt"
-outfile = input_file.split(".")[0] + "converted.txt"
+mappingfile = input_file.split(".")[0] + "_mapping.txt"
+outfile = input_file.split(".")[0] + "_converted.txt"
 
 mapping = {}
 with open(input_file) as f:
@@ -47,7 +47,7 @@ with open(input_file) as f:
 
 with open(mappingfile, "w") as f:
     for node,id in mapping.items():
-        f.writelines(str(node) + " " + str(id))
+        f.writelines(str(node) + " " + str(id) + "\n")
     
 graph = {}
 with open(input_file) as f:
@@ -73,7 +73,7 @@ with open(input_file) as f:
 with open(outfile, "w") as f:
     for parent,children in graph.items():
         for child in children:
-            f.writelines(str(parent) + " " + str(child));
+            f.writelines(str(parent) + " " + str(child) + "\n");
     
 
 
