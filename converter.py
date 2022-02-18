@@ -47,7 +47,7 @@ with open(input_file) as f:
 
 with open(mappingfile, "w") as f:
     for node,id in mapping.items():
-        f.writeline(str(node) + " " + str(id))
+        f.writelines(str(node) + " " + str(id))
     
 graph = {}
 with open(input_file) as f:
@@ -73,7 +73,7 @@ with open(input_file) as f:
 with open(outfile, "w") as f:
     for parent in graph:
         for child in graph[parent]:
-            f.writeline(str(parent) + " " + str(child));
+            f.writelines(str(parent) + " " + str(child));
     
 
 
