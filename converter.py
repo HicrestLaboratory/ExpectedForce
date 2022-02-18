@@ -9,8 +9,9 @@ Created on Mon Dec 21 15:16:01 2020
 Graph Converter
 
 """
-filename = "graph_to_convert.txt"
-
+filename = "fb_full.txt"
+outfile = filename.split["."][0] + "mapping.txt"
+outfile = filename.split["."][0] + "converted.txt"
 
 mapping = {}
 with open(filename, delimiter = " ") as f:
@@ -27,7 +28,6 @@ with open(filename, delimiter = " ") as f:
             mapping[out] = n;
             n += 1;
 
-outfile = "mapping.txt"
 with open(outfile, "w") as f:
     for node,id in mapping.items():
         f.writeline(str(node) + " " + str(id))
@@ -53,7 +53,6 @@ with open(filename, delimiter = " ") as f:
         children.sort();
 
 
-outfile = "converted.txt"
 with open(outfile, "w") as f:
     for parent in graph:
         for child in graph[parent]:
