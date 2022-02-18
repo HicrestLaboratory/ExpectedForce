@@ -53,13 +53,15 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
 	svi egosVect, altersVect;                
 	string filename = argv[1];
 	int ignore_weights = stoi(argv[2]);
-		
+	string out_name = argv[3];
+
+
 	//reads graph
 	int node_count = read_snap_format(egosVect, altersVect, filename, ' ', ignore_weights); //converts SNAP graph to sorted edgelist.
 	//TODO: check if edgelist is full and sorted 
 
 	ofstream outfile;
-	outfile.open("results.txt");
+	outfile.open(out_name);
 	cout << "Evaluating Expected Force for graph '" + filename + "'"<< endl;
 
 	double EXF;
@@ -73,7 +75,7 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
 	}
 	
 	outfile.close();
-	cout << "Results saved as results.txt'" << endl;
+	cout << "Results saved as " << out_name << endl;
 
 	return 0;
 }
