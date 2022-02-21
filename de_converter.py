@@ -32,6 +32,18 @@ if __name__ == "__main__":
     delimiter = args.delimiter;
 
 
+def find_delimiter(file):
+    delimiters = [" ", "  ", "-", "\t"]
+    with open(file) as f:
+        for delimiter in delimiters:
+            line = f.readline
+            if len(line.split(delimiter)) == 2:
+                return delimiter
+
+
+delimiter = find_delimiter(mapping_file)
+print("found delimiter: (", delimiter, ")")
+
 mapping = {}
 with open(mapping_file) as f:
     n = 0;
