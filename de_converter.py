@@ -38,7 +38,8 @@ def find_delimiter(file):
         for delimiter in delimiters:
             line = f.readline()
             if len(line.split(delimiter)) == 2:
-                return delimiter
+                if line.split[0] != "" and line.split[1] != "":
+                    return delimiter
 
 
 delimiter = find_delimiter(mapping_file)
