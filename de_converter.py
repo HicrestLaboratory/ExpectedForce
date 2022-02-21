@@ -54,6 +54,10 @@ with open(mapping_file) as f:
         node_id = int(linesplit[1]);
         mapping[node_id] = node;
 
+
+delimiter = find_delimiter(mapping_file)
+print("found delimiter: (", delimiter, ")")
+
 with open(input_file) as f:
     with open(outfile, "w") as o:
         for line in f:
