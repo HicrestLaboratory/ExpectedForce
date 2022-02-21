@@ -18,7 +18,7 @@ if __name__ == "__main__":
         help="input data")
     parser.add_argument("--mapping",
         help="input mapping")
-    parser.add_argument("--oufile",
+    parser.add_argument("--outfile",
         help="converted file")
     parser.add_argument("--delimiter", default="  ",
         help="delimiter between parent and children node")
