@@ -61,7 +61,6 @@ print("found delimiter: (", delimiter, ")")
 with open(input_file) as f:
     with open(outfile, "w") as o:
         for line in f:
-            print(line)
             linesplit = line.split(delimiter);
             node = int(linesplit[0])
             value = linesplit[1]
