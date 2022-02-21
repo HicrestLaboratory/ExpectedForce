@@ -48,4 +48,8 @@ with open(input_file) as f:
             linesplit = line.split(delimiter);
             node = int(linesplit[0])
             value = linesplit[1]
+            print(value)
             o.writelines(str(mapping[node]) + delimiter + value + "\n")
+            
+            
+print("saved converted file to", outfile)
