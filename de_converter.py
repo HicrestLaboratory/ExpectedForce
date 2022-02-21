@@ -42,8 +42,7 @@ def find_delimiter(file):
                     return delimiter
 
 
-delimiter = find_delimiter(mapping_file)
-print("found delimiter: (", delimiter, ")")
+delimiter = " "
 
 mapping = {}
 with open(mapping_file) as f:
@@ -56,8 +55,7 @@ with open(mapping_file) as f:
         mapping[node_id] = node;
 
 
-delimiter = find_delimiter(mapping_file)
-print("found delimiter: (", delimiter, ")")
+delimiter = "  "
 
 with open(input_file) as f:
     with open(outfile, "w") as o:
