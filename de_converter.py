@@ -36,7 +36,7 @@ def find_delimiter(file):
     delimiters = [" ", "  ", "-", "\t"]
     with open(file) as f:
         for delimiter in delimiters:
-            line = f.readline
+            line = f.readline()
             if len(line.split(delimiter)) == 2:
                 return delimiter
 
