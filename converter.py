@@ -51,6 +51,9 @@ with open(input_file) as f:
             mapping[out] = n;
             n += 1;
 
+for i in range (n, max_id + 1):
+    mapping[i] = i;
+    
 print(n, "Nodes found, max id = ", max_id);
 
 with open(mappingfile, "w") as f:
