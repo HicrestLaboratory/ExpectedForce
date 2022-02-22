@@ -51,7 +51,7 @@ with open(input_file) as f:
             mapping[out] = n;
             n += 1;
 
-print(n, "Nodes found");
+print(n, "Nodes found, max id = ", max_id);
 
 with open(mappingfile, "w") as f:
     for node,nodeid in mapping.items():
