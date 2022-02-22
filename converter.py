@@ -34,16 +34,19 @@ mappingfile = outname + "_mapping.txt"
 outfile = outname + "_converted.txt"
 
 mapping = {}
+max_id = -1;
 with open(input_file) as f:
     n = 0;
     inc = "!"
     for line in f:
         linesplit = line.split(delimiter)
         inc = int(linesplit[0]);
+        max_id = max(inc,max_id);
         if inc not in mapping:
             mapping[inc] = n;
             n += 1;
         out = int(linesplit[1]);
+        max_id = max(out,max_id);
         if out not in mapping:
             mapping[out] = n;
             n += 1;
