@@ -63,9 +63,8 @@ with open(input_file) as f:
             linesplit = line.split(delimiter);
             node = int(linesplit[0])
             value = linesplit[1]
-            if value == "-nan":
-                value = "-1"
-            o.writelines(str(mapping[node]) + delimiter + value + "\n")
+            towrite = str(mapping[node]) + delimiter + value;
+            o.writelines(towrite)
             
             
 print("saved converted file to", outfile)
