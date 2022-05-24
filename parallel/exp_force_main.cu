@@ -118,11 +118,11 @@ __global__ void CountClusterExpectedForce(int* cluster_size, int* cluster_start,
 /**
  * Reads the graph.
  */
-void read_graph(int_vector &vertex_start, int_vector &vertex_length, int_vector &neighbors, set_vector &neighbor_sets, std::string infilename, char delimiter = ' ', int ignore_weights = 0) 
+void read_graph(int_vector &v_start, int_vector &vertex_length, int_vector &neighbors_vector, set_vector &neighbor_sets, std::string infilename, char delimiter = ' ', int ignore_weights = 0) 
 {
-	vertex_start.clear(); 
+	v_start.clear(); 
     vertex_length.clear();
-    neighbors.clear();
+    neighbors_vector.clear();
 
 	std::ifstream infile;
 	infile.open(infilename);
@@ -133,7 +133,7 @@ void read_graph(int_vector &vertex_start, int_vector &vertex_length, int_vector 
     int vertex_count = 0;
     
     // start of vertex 0
-    vertex_start.push_back(0);
+    v_start.push_back(0);
     std::set<int> neighbor_set;
 
 	while (getline(infile, temp, delimiter)) {
@@ -143,7 +143,7 @@ void read_graph(int_vector &vertex_start, int_vector &vertex_length, int_vector 
 		if (node != last_node) {
             if (vertex_count != 0) {
                 vertex_length.push_back(vertex_count);
-                vertex_start.push_back(node_count-1);
+                v_start.push_back(node_count-1);
                 neighbor_sets.push_back(neighbor_set);
             }
         	last_node = node;
@@ -161,7 +161,7 @@ void read_graph(int_vector &vertex_start, int_vector &vertex_length, int_vector 
             node_count--;
         } else {
             // normal case
-            neighbors.push_back(neighbor); 
+            neighbors_vector.push_back(neighbor); 
             neighbor_set.insert(neighbor);
         }
 	}
@@ -283,7 +283,7 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
     int threads = atoi(argv[3]);
     int streamCount = atoi(argv[4]);
 
-    int_vector vertex_start, vertex_length, neighbors;
+    int_vector v_start, vertex_length, neighbors_vector;
     set_vector neighbor_sets;
 
     //int ignore_weights = std::stoi(argv[2]);
@@ -291,10 +291,22 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
     std::cout << "Evaluating file " << filename << std::endl;
 
     int64_t duration;
-    int repetitions = 5;
+    int repetitions = 1;
 
     //reads graph
-    read_graph(vertex_start, vertex_length, neighbors, neighbor_sets, filename, ' ', 1); //converts graph to a v-graph-like structure
+    read_graph(v_start, vertex_length, neighbors_vector, neighbor_sets, filename, ' ', 1); //converts graph to a v-graph-like structure
+    
+    // transform from C++ vector to arrays that can be copied in async by CUDA
+    int* vertex_start;
+    cudaMallocHost((void**) &vertex_start, sizeof(int) * v_start.size());
+    std::copy(v_start.begin(), v_start.end(), vertex_start);
+    v_start = std::vector<int>(); // empties the v_start, move constructor works like swap()
+
+    int* neighbors;
+    cudaMallocHost((void**) &neighbors, sizeof(int) * neighbors_vector.size());
+    std::copy(neighbors_vector.begin(), neighbors_vector.end(), neighbors);
+    neighbors_vector = std::vector<int>(); // empties the neighbors_vector, move constructor works like swap()
+
 
     for (int rep = 0; rep < repetitions; rep++) {
 
@@ -342,14 +354,16 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
             cudaMalloc((void**)&cluster_size_ptr, sizeof(int) * graph_summary.cluster_count);
             cluster_size_pointers.push_back(cluster_size_ptr);
 
-            int* host_cluster_size_ptr = (int*) malloc(sizeof(int) * graph_summary.cluster_count);
+            int* host_cluster_size_ptr;
+            cudaMallocHost((void**)&host_cluster_size_ptr, sizeof(int) * graph_summary.cluster_count);
             host_cluster_size_pointers.push_back(host_cluster_size_ptr);
 
             int* cluster_start_ptr;
             cudaMalloc((void**)&cluster_start_ptr, sizeof(int) * graph_summary.cluster_count * 3);
             cluster_start_pointers.push_back(cluster_start_ptr);
 
-            int* host_cluster_start_ptr = (int*) malloc(sizeof(int) * graph_summary.cluster_count * 3);
+            int* host_cluster_start_ptr;
+            cudaMallocHost((void**)&host_cluster_start_ptr, sizeof(int) * graph_summary.cluster_count * 3);
             host_cluster_start_pointers.push_back(host_cluster_start_ptr);
         }
         check_error();
@@ -369,8 +383,17 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
         cudaMemcpy(length_ptr, vertex_length.data(), sizeof(int) * vertex_length.size(), cudaMemcpyHostToDevice);
         check_error();
 
-        std::vector<int> cluster_sizes;
-        std::vector<int> start_vertex;
+        // measures all generated clusters (one 'computed' cluster can be formed in 4 different configurations -> 4 'actual' clusters)
+        size_t formed_clusters_count = 4 * graph_summary.cluster_count;
+
+        int* cluster_sizes;
+        cudaMallocHost((void**) &cluster_sizes, sizeof(int) * formed_clusters_count); // cluster sizes * 4 -> each cluster has 4 initiation variants
+        int* start_vertex;
+        cudaMallocHost((void**) &start_vertex, sizeof(int) * formed_clusters_count); // cluster sizes * 4 -> each cluster has 4 starting points
+
+        // offsets in cluster_sizes and start_vertex to the first unwritten slot
+        size_t data_offset = 0;
+        
         std::vector<size_t> total_cluster_size(vertex_length.size(), 0);
 
         // std::cout << "Allocated" << std::endl;
@@ -389,11 +412,11 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
                 check_error();
 
                 // std::cout << "Copying vertex start pointers" << std::endl;
-                cudaMemcpy(vertex_start_pointers[i], vertex_start.data() + chunk_start, sizeof(int) * (chunk_end - chunk_start + 1), cudaMemcpyHostToDevice);
+                cudaMemcpy(vertex_start_pointers[i], vertex_start + chunk_start, sizeof(int) * (chunk_end - chunk_start + 1), cudaMemcpyHostToDevice);
                 check_error();
 
                 // std::cout << "Copying neighbors" << std::endl;
-                cudaMemcpy(neighbor_pointers[i], neighbors.data() + vertex_start[chunk_start], sizeof(int) * neighbor_size, cudaMemcpyHostToDevice);
+                cudaMemcpy(neighbor_pointers[i], neighbors + vertex_start[chunk_start], sizeof(int) * neighbor_size, cudaMemcpyHostToDevice);
                 check_error();
 
                 // std::cout << "Blocks " << blocks << ", threads " << threads << ", i " << i << ", vertex count " << chunk_end - chunk_start + 1 << ", cluster count " << number_of_clusters << ", vertex offset " << chunk_start << ", neighbor offset " << vertex_start[chunk_start] << std::endl;
@@ -431,16 +454,19 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
                         cluster_size -= 2;
                     }
 
-                    cluster_sizes.push_back(cluster_size);
-                    cluster_sizes.push_back(cluster_size);
-                    cluster_sizes.push_back(cluster_size);
-                    cluster_sizes.push_back(cluster_size);
+                    for (size_t k = 0; k < 4; k++) {
+                        cluster_sizes[data_offset + k] = cluster_size;
+                    }
 
-                    // push twice - two combinations of S->A S->B and S->B S->A (two clusters but with same edges) 
-                    start_vertex.push_back(source_vertex);
-                    start_vertex.push_back(source_vertex);
-                    start_vertex.push_back(neighbor_one);
-                    start_vertex.push_back(neighbor_two);
+
+                    // push twice - two combinations of S->A S->B and S->B S->A (two clusters but with same edges)
+                    start_vertex[data_offset] = source_vertex;
+                    start_vertex[data_offset + 1] = source_vertex;
+                    start_vertex[data_offset + 2] = neighbor_one;
+                    start_vertex[data_offset + 3] = neighbor_two;
+
+                    data_offset = data_offset + 4;
+
                     total_cluster_size[source_vertex] += cluster_size;
                     total_cluster_size[source_vertex] += cluster_size;
                     total_cluster_size[neighbor_one] += cluster_size;
@@ -455,11 +481,13 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
             cudaFree(neighbor_pointers[i]);
             cudaFree(cluster_size_pointers[i]);
             cudaFree(cluster_start_pointers[i]);
-            free(host_cluster_size_pointers[i]);
-            free(host_cluster_start_pointers[i]);
+            cudaFreeHost(host_cluster_size_pointers[i]);
+            cudaFreeHost(host_cluster_start_pointers[i]);
         }     
         cudaFree(length_ptr);
         cudaFree(pairs_ptr);
+        cudaFreeHost(vertex_start);
+        cudaFreeHost(neighbors);
 
         // std::cout << "First pointers freed" << std::endl;
 
@@ -487,8 +515,9 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
         int ceil_share = (int) ((graph_summary.cluster_count * 4 / array_size) + ((graph_summary.cluster_count * 4 % array_size) != 0));
         int chunks = std::max((int) 1, ceil_share);
 
-        std::vector<float> normalized_sizes(cluster_sizes.size(), 0);
-        // std::cout << "Normalized sizes size: " << normalized_sizes.size() << std::endl;
+        float* normalized_sizes;
+        cudaMallocHost((void**) &normalized_sizes, sizeof(float) * formed_clusters_count);
+        // std::cout << "Normalized sizes size: " << 4 * graph_summary.cluster_count << " float elements" << std::endl;
 
         for (int index = 0; index < chunks; index += streamCount) {
             int streamsUsed = std::min((int) streamCount, (int) chunks - index);
@@ -500,15 +529,15 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
                 // std::cout << "Offset " << offset << std::endl;
                 size_t copied_bytes = sizeof(int) * element_count;
                 // std::cout << "Copied bytes " << copied_bytes << std::endl;
-                cudaMemcpyAsync(input_sizes[i], cluster_sizes.data() + offset, copied_bytes, cudaMemcpyHostToDevice);
+                cudaMemcpyAsync(input_sizes[i], cluster_sizes + offset, copied_bytes, cudaMemcpyHostToDevice);
                 // std::cout << "Input sizes copied" << std::endl;
-                cudaMemcpyAsync(input_vertices[i], start_vertex.data() + offset, copied_bytes, cudaMemcpyHostToDevice);
+                cudaMemcpyAsync(input_vertices[i], start_vertex + offset, copied_bytes, cudaMemcpyHostToDevice);
                 // std::cout << "Element count " << element_count << ", vertex size " << vertex_length.size() << ", array size " << array_size * i << std::endl;
                 CountClusterExpectedForce<<<blocks, threads, 0, streams[i]>>>(input_sizes[i], input_vertices[i], total_size_ptr, outputs[i], element_count);
                 // std::cout << "Elements copied" << std::endl;
                 size_t copied_bytes_back = sizeof(float) * element_count;
                 // std::cout << "Copied bytes back: " << copied_bytes_back << std::endl;
-                cudaMemcpyAsync(normalized_sizes.data() + offset, outputs[i], copied_bytes_back, cudaMemcpyDeviceToHost);
+                cudaMemcpyAsync(normalized_sizes + offset, outputs[i], copied_bytes_back, cudaMemcpyDeviceToHost);
             }
 
             cudaDeviceSynchronize();
@@ -529,14 +558,23 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
             check_error();
         }    
         cudaFree(total_size_ptr);
+        check_error();
+
+        cudaFreeHost(cluster_sizes);
+        check_error();
 
         // std::cout << "Memory freed" << std::endl;
 
         std::vector<float> results(vertex_length.size(), 0);
 
-        for (size_t i = 0; i < normalized_sizes.size(); i++) {
+        for (size_t i = 0; i < formed_clusters_count; i++) {
             results[start_vertex[i]] += normalized_sizes[i];
         }
+
+        cudaFreeHost(start_vertex);
+        check_error();
+        cudaFreeHost(normalized_sizes);
+        check_error();
 
         // std::cout << "ExF computed" << std::endl;
 
