@@ -16,7 +16,7 @@
 typedef std::vector<size_t> size_t_vector;
 typedef std::vector<int> int_vector;
 typedef std::vector<std::pair<int, int>> pair_vector;
-typedef std::vector<std::vector<size_t>> interval_tree;
+typedef std::vector<std::vector<size_t>> interval_tree_struct;
 typedef std::vector<std::set<int>> set_vector;
 
 // common graph data
@@ -198,7 +198,7 @@ void generate_pairs(int_vector &pairs, int_vector &pair_count, int highest_degre
 /**
  * Splits all vertices in graph into chunks that can be computed at once. Also calculates several other properties of the graph.
  */
-void split_into_generating_chunks(int_vector &generating_chunks, int_vector &vertex_length, int_vector &pair_count, int_vector &chunk_size, int_vector &cluster_start, interval_tree &intervals, int blocks, int threads) {
+void split_into_generating_chunks(int_vector &generating_chunks, int_vector &vertex_length, int_vector &pair_count, int_vector &chunk_size, int_vector &cluster_start, interval_tree_struct &intervals, int blocks, int threads) {
     size_t cluster_count = 0;
     int size = 0;
     int chunk_start = 0;
@@ -286,6 +286,9 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
     int_vector v_start, vertex_length, neighbors_vector;
     set_vector neighbor_sets;
 
+    interval_tree_struct intervals;
+    int_vector pairs, pair_count, generating_chunks, chunk_size, path_vertex_one, cluster_start;
+
     //int ignore_weights = std::stoi(argv[2]);
 
     std::cout << "Evaluating file " << filename << std::endl;
@@ -293,9 +296,19 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
     int64_t duration;
     int repetitions = 1;
 
+
     //reads graph
     read_graph(v_start, vertex_length, neighbors_vector, neighbor_sets, filename, ' ', 1); //converts graph to a v-graph-like structure
-    
+
+    int highest_degree = *std::max_element(vertex_length.begin(), vertex_length.end());
+
+    generate_pairs(pairs, pair_count, highest_degree);
+
+    split_into_generating_chunks(generating_chunks, vertex_length, pair_count, chunk_size, cluster_start, intervals, blocks, threads);
+
+    int biggest_chunk = graph_summary.biggest_chunk;
+    int most_neighbors = graph_summary.longest_neighbor_seq;
+        
     // transform from C++ vector to arrays that can be copied in async by CUDA
     int* vertex_start;
     cudaMallocHost((void**) &vertex_start, sizeof(int) * v_start.size());
@@ -307,22 +320,52 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
     std::copy(neighbors_vector.begin(), neighbors_vector.end(), neighbors);
     neighbors_vector = std::vector<int>(); // empties the neighbors_vector, move constructor works like swap()
 
+    int offset = 0;
+    for (int i = 0; i < intervals.size(); i++) {
+        std::cout << "Node: " << i << ": offset " << offset << ", size " << intervals[i].size() << std::endl;
+        offset += intervals[i].size();
+    }
+
+    // transform interval tree (std::vector<std::vector<int>>) into cuda pinned-memory arrays
+    size_t* interval_tree;
+    int* interval_tree_node_start;
+    int* interval_tree_node_length;
+    
+    int interval_tree_elements = 0;
+    for (size_t tree_node = 0; tree_node < intervals.size(); tree_node++) {
+        interval_tree_elements += intervals[tree_node].size();
+    }
+
+    cudaMallocHost((void**) &interval_tree, sizeof(size_t) * interval_tree_elements);
+    cudaMallocHost((void**) &interval_tree_node_start, sizeof(int) * intervals.size());
+    cudaMallocHost((void**) &interval_tree_node_length, sizeof(int) * intervals.size());
+
+    size_t interval_offset = 0;
+    for (size_t tree_node = 0; tree_node < intervals.size(); tree_node++) {
+        std::copy(intervals[tree_node].begin(), intervals[tree_node].end(), interval_tree + interval_offset);
+        interval_tree_node_start[tree_node] = interval_offset;
+        interval_tree_node_length[tree_node] = intervals[tree_node].size(); 
+        std::cout << "expect: ";
+        for (int j = 0; j < intervals[tree_node].size(); j++) {
+            std::cout << intervals[tree_node][j] << " ";
+        }
+        std::cout << std::endl;
+        std::cout << "copied: ";
+        for (int j = 0; j < intervals[tree_node].size(); j++) {
+            std::cout << (*(interval_tree + interval_offset + j)) << " ";
+        }
+        std::cout << std::endl;
+        interval_offset += intervals[tree_node].size();
+    
+    }
+
+    //cleanup
+    intervals.clear(); // should destroy or 'inner' vectors?
+
 
     for (int rep = 0; rep < repetitions; rep++) {
 
-        interval_tree intervals;
-        int_vector pairs, pair_count, generating_chunks, chunk_size, path_vertex_one, cluster_start;
-
         auto start = std::chrono::high_resolution_clock::now();
-
-        int highest_degree = *std::max_element(vertex_length.begin(), vertex_length.end());
-
-        generate_pairs(pairs, pair_count, highest_degree);
-
-        split_into_generating_chunks(generating_chunks, vertex_length, pair_count, chunk_size, cluster_start, intervals, blocks, threads);
-
-        int biggest_chunk = graph_summary.biggest_chunk;
-        int most_neighbors = graph_summary.longest_neighbor_seq;
 
         // std::cout << "Allocating first pointers" << std::endl;
 
@@ -398,17 +441,18 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
 
         // std::cout << "Allocated" << std::endl;
 
-        for (int index = 0; index < generating_chunks.size(); index += 2 * streamCount) {
-            int streamsUsed = std::min((int) (generating_chunks.size() / 2) - index/2, (int) streamCount);
+        for (size_t index = 0; index < generating_chunks.size(); index += 2 * streamCount) {
+            int streamsUsed = std::min((int) ((generating_chunks.size() / 2) - index/2), (int) streamCount);
             for (int i = 0; i < streamsUsed; i++) {
-                int chunk_index = index + 2 * i;
-                int chunk_start = generating_chunks[chunk_index];
-                int chunk_end = generating_chunks[chunk_index + 1];
+                size_t chunk_index = index + 2 * i;
+                size_t chunk_start = generating_chunks[chunk_index];
+                size_t chunk_end = generating_chunks[chunk_index + 1];
                 size_t number_of_clusters = cluster_start[chunk_end] + pair_count[vertex_length[chunk_end]] - cluster_start[chunk_start];
-                int neighbor_size = vertex_start[chunk_end] + vertex_length[chunk_end] - vertex_start[chunk_start];
+                size_t neighbor_size = vertex_start[chunk_end] + vertex_length[chunk_end] - vertex_start[chunk_start];
+                size_t interval_tree_offset = index/2 + i;
 
-                // std::cout << "Copying index pointers: " << sizeof(int) * intervals[index/2 + i].size() << std::endl;
-                cudaMemcpyAsync(index_pointers[i], intervals[index/2 + i].data(), sizeof(size_t) * intervals[index/2 + i].size(), cudaMemcpyHostToDevice);
+                std::cout << "Copying index pointers: node " << interval_tree_offset << ", from offset " << (*(interval_tree_node_start + interval_tree_offset)) << ", size " << (*(interval_tree_node_length + interval_tree_offset)) << std::endl;
+                cudaMemcpyAsync(index_pointers[i], interval_tree + (*(interval_tree_node_start + interval_tree_offset)), sizeof(size_t) * (*(interval_tree_node_length + interval_tree_offset)), cudaMemcpyHostToDevice);
                 check_error();
 
                 // std::cout << "Copying vertex start pointers" << std::endl;
@@ -488,6 +532,9 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
         cudaFree(pairs_ptr);
         cudaFreeHost(vertex_start);
         cudaFreeHost(neighbors);
+        cudaFreeHost(interval_tree);
+        cudaFreeHost(interval_tree_node_start);
+        cudaFreeHost(interval_tree_node_length);
 
         // std::cout << "First pointers freed" << std::endl;
 
