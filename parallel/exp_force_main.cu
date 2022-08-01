@@ -282,7 +282,7 @@ int microseconds(cudaEvent_t* start, cudaEvent_t* stop) {
  */
 int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; print its ExF in result.txt 
 
-	//cout << "This program determines the Expected Force of every node for each graph.\n Stores the results in 'FILENAME_results.txt'" << endl;
+	// cout << "This program determines the Expected Force of every node for each graph.\n Stores the results in 'FILENAME_results.txt'" << endl;
 	
     if(argc < 5) {
         std::cout << "Insufficient number of arguments: " << argc << std::endl;
@@ -314,6 +314,7 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
                 copy4_start[streamCount], copy4_stop[streamCount];
     std::int64_t repetition_duration = 0, graph_read_duration = 0, copy1_duration = 0, kernel1_duration = 0, copy2_duration = 0, mid_process_duration = 0, copy3_duration = 0, kernel2_duration = 0, copy4_duration = 0, end_process_duration = 0;
     size_t total_gpu_memory, free_beginning, free_stage_1, free_stage_2;
+
     cudaMemGetInfo(&free_beginning, &total_gpu_memory);
 
     // initialize events
@@ -342,7 +343,7 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
 
     std::cout << "Evaluating file " << filename << std::endl;
 
-    int repetitions = 5;
+    int repetitions = 1;
 
     cudaEventRecord(graph_read_start);
 
@@ -375,7 +376,7 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
     size_t* interval_tree;
     int* interval_tree_node_start;
     int* interval_tree_node_length;
-    
+
     int interval_tree_elements = 0;
     for (size_t tree_node = 0; tree_node < intervals.size(); tree_node++) {
         interval_tree_elements += intervals[tree_node].size();
@@ -414,7 +415,7 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
             cudaStreamCreate(&streams[i]);
             check_error();
 
-            size_t* index_ptr;
+            size_t* index_ptr; 
             cudaMalloc((void**)&index_ptr, sizeof(size_t) * biggest_chunk);
             index_pointers.push_back(index_ptr);
             
@@ -443,6 +444,15 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
             host_cluster_start_pointers.push_back(host_cluster_start_ptr);
         }
         check_error();
+
+        std::cout << "pairs_ptr size: " << sizeof(int) * pairs.size() << std::endl;
+        std::cout << "length_ptr size: " << sizeof(int) * vertex_length.size() << std::endl;
+        std::cout << "cluster_sizes size: " << sizeof(int) * 4 * graph_summary.cluster_count << std::endl;
+        std::cout << "start_vertex size: " << sizeof(int) * 4 * graph_summary.cluster_count << std::endl;
+        std::cout << "index_ptr size xstreams: " << sizeof(size_t) * biggest_chunk << std::endl;
+        std::cout << "vertex_start_ptr size xstreams: " << sizeof(int) * biggest_chunk << std::endl;
+        std::cout << "neighbor_ptr size xstreams: " << sizeof(int) * graph_summary.cluster_count << std::endl;
+        std::cout << "cluster_size_ptr size xstreams: " << sizeof(int) * graph_summary.cluster_count * 3 << std::endl;
 
         // std::cout << "Allocating common pointers" << std::endl;
 
@@ -519,11 +529,13 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
 
             cudaDeviceSynchronize();
 
-            for (int i = 0; i < streamCount; i++) {
+            for (int i = 0; i < streamsUsed; i++) {
                 copy1_duration += microseconds(&copy1_start[i], &copy1_stop[i]);
                 kernel1_duration += microseconds(&kernel1_start[i], &kernel1_stop[i]);
                 copy2_duration += microseconds(&copy2_start[i], &copy2_stop[i]);
             }
+
+            check_error();
 
             auto start = std::chrono::high_resolution_clock::now();
             for (int i = 0; i < streamsUsed; i++) {
@@ -580,6 +592,7 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
         }     
         cudaFree(length_ptr);
         cudaFree(pairs_ptr);
+        check_error();
 
         // std::cout << "First pointers freed" << std::endl;
 
@@ -587,21 +600,27 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
         std::vector<int*> input_vertices;
         std::vector<float*> outputs;
         int array_size = blocks * threads;
+        // std::cout << "Allocated vertex_ptr: " << sizeof(int) * array_size << std::endl;
         for (int i = 0; i < streamCount; i++) {
             int *size_ptr, *vertex_ptr; 
             float *devOut;
             cudaMalloc((void**)&size_ptr, (size_t) sizeof(int) * array_size);
             cudaMalloc((void**)&vertex_ptr, (size_t) sizeof(int) * array_size);
             cudaMalloc((void**)&devOut, (size_t) sizeof(float) * array_size);
+            // std::cout << "size_ptr: " << size_ptr << std::endl;
             input_sizes.push_back(size_ptr);
             input_vertices.push_back(vertex_ptr);
             outputs.push_back(devOut);
+            check_error();
         }
-
+        // std::cout << " allocate total size ptr " << std::endl;
         size_t *total_size_ptr;
         cudaMalloc((void**)&total_size_ptr, sizeof(size_t) * total_cluster_size.size());
-
+        check_error();
         cudaMemcpyAsync(total_size_ptr, total_cluster_size.data(), sizeof(size_t) * total_cluster_size.size(), cudaMemcpyHostToDevice);
+        check_error();
+
+        // std::cout << " compute ceil" << std::endl;
 
         // std::ceil is stupid
         int ceil_share = (int) ((graph_summary.cluster_count * 4 / array_size) + ((graph_summary.cluster_count * 4 % array_size) != 0));
@@ -625,28 +644,38 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
                 // std::cout << "Offset " << offset << std::endl;
                 size_t copied_bytes = sizeof(int) * element_count;
 
+                // std::cout << "stream[" << i << "]: " << streams[i] << std::endl;
+                // std::cout << "copy3_start[" << i << "]: " << copy3_start[i] << std::endl;
                 cudaEventRecord(copy3_start[i], streams[i]);
+                check_error();
 
                 // std::cout << "Copied bytes " << copied_bytes << std::endl;
                 cudaMemcpyAsync(input_sizes[i], cluster_sizes + offset, copied_bytes, cudaMemcpyHostToDevice);
-                // std::cout << "Input sizes copied" << std::endl;
-                cudaMemcpyAsync(input_vertices[i], start_vertex + offset, copied_bytes, cudaMemcpyHostToDevice);
+                check_error();
 
+                // std::cout << "Input sizes copied " << std::endl;
+                cudaMemcpyAsync(input_vertices[i], start_vertex + offset, copied_bytes, cudaMemcpyHostToDevice);
+                check_error();
+                
                 cudaEventRecord(copy3_stop[i], streams[i]);
 
                 // std::cout << "Element count " << element_count << ", vertex size " << vertex_length.size() << ", array size " << array_size * i << std::endl;
                 cudaEventRecord(kernel2_start[i], streams[i]);
                 CountClusterExpectedForce<<<blocks, threads, 0, streams[i]>>>(input_sizes[i], input_vertices[i], total_size_ptr, outputs[i], element_count);
                 cudaEventRecord(kernel2_stop[i], streams[i]);
+                check_error();
                 // std::cout << "Elements copied" << std::endl;
                 size_t copied_bytes_back = sizeof(float) * element_count;
 
                 cudaEventRecord(copy4_start[i], streams[i]);
+                check_error();
 
                 // std::cout << "Copied bytes back: " << copied_bytes_back << std::endl;
                 cudaMemcpyAsync(normalized_sizes + offset, outputs[i], copied_bytes_back, cudaMemcpyDeviceToHost);
+                check_error();
 
                 cudaEventRecord(copy4_stop[i], streams[i]);
+                check_error();
             }
 
             cudaDeviceSynchronize();
@@ -755,7 +784,7 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
     std::cout << "copy1_per_repetition;" << copy1_duration / repetitions << std::endl;
     std::cout << "kernel1_per_repetition;" << kernel1_duration / repetitions << std::endl;
     std::cout << "copy2_per_repetition;" << copy2_duration / repetitions << std::endl;
-    std::cout << "mid_process_per_repetition;" << mid_process_duration / repetitions << std::endl;
+    std::cout << "mid_process_per_repetition;" << static_cast<int>(mid_process_duration / repetitions) << std::endl;
     std::cout << "copy3_per_repetition;" << copy3_duration /  repetitions << std::endl;
     std::cout << "kernel2_per_repetition;" << kernel2_duration / repetitions << std::endl;
     std::cout << "copy4_per_repetition;" << copy4_duration / repetitions << std::endl;
@@ -766,7 +795,7 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
     std::cout << "copy1;" << copy1_duration / (parallel_block1_repeats * repetitions / streamCount) << std::endl;
     std::cout << "kernel1;" << kernel1_duration / (parallel_block1_repeats * repetitions / streamCount) << std::endl;
     std::cout << "copy2;" << copy2_duration / (parallel_block1_repeats * repetitions / streamCount) << std::endl;
-    std::cout << "mid_process;" << mid_process_duration / (repetitions * ceil((double) parallel_block1_repeats / streamCount)) << std::endl;
+    std::cout << "mid_process;" << static_cast<int>(mid_process_duration / (repetitions * ceil((double) parallel_block1_repeats / streamCount))) << std::endl;
     std::cout << "parallel2_chunks;" << parallel_block2_repeats << std::endl;
     std::cout << "parallel2_repeats;" << parallel_block2_repeats / streamCount << std::endl;
     std::cout << "copy3;" << copy3_duration / (parallel_block2_repeats * repetitions / streamCount) << std::endl;
