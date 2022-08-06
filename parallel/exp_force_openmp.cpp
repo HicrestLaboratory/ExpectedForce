@@ -12,7 +12,8 @@
 #include <atomic> // std::atomic for correct duration summing in streams
 #include <algorithm> // max_element, std::min
 #include <utility> // pair
-#include <math.h> // ceil
+#include <math.h> // ceilm
+#include <omp.h>
 
 // for debugging only
 #define OBSERVED_NODE -1
@@ -128,7 +129,7 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
 
     std::cout << "Evaluating file " << filename << std::endl;
 
-    int repetitions = 3;
+    int repetitions = 1;
 
     //reads graph
     read_graph(v_start, vertex_length, neighbors_vector, neighbor_sets, filename, ' ', 1); //converts graph to a v-graph-like structure
@@ -137,6 +138,7 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
 
     generate_pairs(pairs, pair_count, highest_degree);
 
+
     for (int rep = 0; rep < repetitions; rep++) {
         auto start = std::chrono::high_resolution_clock::now();
 
@@ -144,19 +146,19 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
         size_t* total_cluster_sizes = (size_t*) malloc(sizeof(size_t) * v_start.size());
         std::vector<std::map<int,int>> cluster_map(v_start.size());
 
-        #pragma omp parallel 
+        #pragma omp parallel
         {
-            #pragma omp parallel for 
+            #pragma omp for 
             for (int cluster=0; cluster < v_start.size(); cluster++) {
                 total_cluster_sizes[cluster] = 0;
             }
 
-            #pragma omp parallel for
+            #pragma omp for
             for (int current_vertex=0; current_vertex < v_start.size(); current_vertex++) {
                 int neighbors_start = v_start[current_vertex];
                 int vector_size = vertex_length[current_vertex];
                 int cluster_count = pair_count[vertex_length[current_vertex]];
-            for (int computed_pair=0; computed_pair < cluster_count; computed_pair++) {
+                for (int computed_pair=0; computed_pair < cluster_count; computed_pair++) {
                     int neighbor_one = neighbors_vector[neighbors_start + pairs[2 * computed_pair]];
                     int neighbor_two = neighbors_vector[neighbors_start + pairs[2 * computed_pair + 1]];
 
@@ -172,7 +174,6 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
                         total_cluster_sizes[neighbor_one] += cluster_size;
                         total_cluster_sizes[neighbor_two] += cluster_size;
 
-
                         // store clusters for later normalization and exf computation
                         cluster_map[current_vertex].insert(std::pair<int,int> (cluster_size, 0));
                         cluster_map[neighbor_one].insert(std::pair<int,int> (cluster_size, 0));
@@ -184,25 +185,25 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
                         cluster_map[neighbor_two][cluster_size]++;
                     }
                 }  
-            }
 
-            #pragma omp parallel for
-            for (int current_vertex=0; current_vertex < v_start.size(); current_vertex++) {
-                std::map<int, int> current_map = cluster_map[current_vertex];
-                float current_expected_force = 0;
+                #pragma omp for
+                for (int current_vertex=0; current_vertex < v_start.size(); current_vertex++) {
+                    std::map<int, int> current_map = cluster_map[current_vertex];
+                    float current_expected_force = 0;
 
-                for (auto const& cluster_pair : current_map) {
-                    int cluster_size = cluster_pair.first;
-                    float normalized = (float) cluster_size/total_cluster_sizes[current_vertex];
-                    // negated entropy -> subtract instead of adding negative; insert as many times as there were occurrences
-                    current_expected_force -= (logf(normalized) * (normalized)) * cluster_pair.second; 
+                    for (auto const& cluster_pair : current_map) {
+                        int cluster_size = cluster_pair.first;
+                        float normalized = (float) cluster_size/total_cluster_sizes[current_vertex];
+                        // negated entropy -> subtract instead of adding negative; insert as many times as there were occurrences
+                        current_expected_force -= (logf(normalized) * (normalized)) * cluster_pair.second; 
+                    }
+
+                    expected_force[current_vertex] = current_expected_force;
                 }
-
-                expected_force[current_vertex] = current_expected_force;
             }
-            
-            free(total_cluster_sizes);
         }
+
+        free(total_cluster_sizes);
 
         auto end = std::chrono::high_resolution_clock::now();
         auto time = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
