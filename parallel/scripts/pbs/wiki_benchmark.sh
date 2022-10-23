@@ -14,17 +14,17 @@
 # set the execution queue
 #PBS -q common_cpuQ 
 
-#PBS -e fb_circles.log
+#PBS -e wiki.log
 
 module load cuda-11.0
 module load gcc75
 
 /apps/cuda-11.0/bin/nvcc ~/ExpectedForce/parallel/exp_force_main.cu -o ~/ExpectedForce/parallel/output/ExForce -std=c++11
 
-for blocks in 64 128 256
+for blocks in 554 1024 2048
 do
     for stream_count in 1 2 4 8
     do
-        ~/ExpectedForce/parallel/output/ExForce ~/ExpectedForce/parallel/test_graphs/ready/fb-social-circles.txt $blocks 1024 $stream_count 1 >> ~/ExpectedForce/parallel/output/stopwatch/fb-social-circles.txt
+        ~/ExpectedForce/parallel/output/ExForce ~/ExpectedForce/parallel/test_graphs/ready/wiki.txt $blocks 1024 $stream_count 1 >> ~/ExpectedForce/parallel/output/stopwatch/wiki_stopwatch.txt
     done 
 done

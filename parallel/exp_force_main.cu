@@ -118,7 +118,16 @@ __global__ void CountClusterExpectedForce(int* cluster_size, int* cluster_start,
 }
 
 /**
- * Reads the graph.
+ * Reads the graph. 
+ * Input limitations:
+ * - graph represented as a list of edges: 'source target' separated by a single whitespace (one edge per line)
+ * - edges sorted by source vertex, then by target vertex
+ * - graph is undirected, for every edge 'v1 v2' there is also an edge 'v2 v1'
+ * - no multiedges are present
+ * - no vertices without edges
+ * - vertex ID starts from 0 and ends at n-1, no gaps
+ *   - n = number of vertices in graph
+ * - for normalization, you can use attached script transformer.py
  */
 void read_graph(int_vector &v_start, int_vector &vertex_length, int_vector &neighbors_vector, set_vector &neighbor_sets, std::string infilename, char delimiter = ' ', int ignore_weights = 0) 
 {

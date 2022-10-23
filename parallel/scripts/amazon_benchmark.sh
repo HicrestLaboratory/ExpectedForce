@@ -20,6 +20,6 @@ for blocks in 128 256 512
 do
     for stream_count in 2 4 8 
     do
-        srun -N 1 ../output/ExForce ../input/Amazon0302.txt $blocks 1024 $stream_count 1 >> amazon_stopwatch.txt
+        srun -N 1 ../output/ExForce ../input/ready/Amazon0302.txt $blocks 1024 $stream_count 1 >> amazon_stopwatch.txt
     done 
 done

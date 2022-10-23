@@ -1,5 +1,9 @@
 #include "stdafx.h"
 
+// log start and end time (granularity in seconds only)
+#include <ctime>
+#include <iostream>
+
 using namespace std;
 
 typedef vector<int> svi;
@@ -59,21 +63,38 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
 	//TODO: check if edgelist is full and sorted 
 
 	ofstream outfile;
-	outfile.open("results.txt");
+	//outfile.open("results.txt");
+	outfile.open(argv[3]);
 	cout << "Evaluating Expected Force for graph '" + filename + "'"<< endl;
+
+    std::time_t start = std::time(0);   // get time now
+    std::tm* start_time = std::localtime(&start);
+    std::cout << "Start: " 
+              << start_time->tm_hour << ':' 
+              << start_time->tm_min << ":" 
+              << start_time->tm_sec 
+              << std::endl; 
 
 	double EXF;
 	for (int i = 0; i < node_count; i++) 
 	{
 		//calculates and prints on file the Expected Force for each node
 		EXF = exfcpp(egosVect, altersVect, i);
-		outfile << std::to_string(i) << "  " << std::to_string(EXF) << endl;
+		outfile << to_string(i) << "  " << to_string(EXF) << endl;
 		//notificate progress
-		cout << i + 1 << "out of" << node_count << endl;
+		// cout << i + 1 << "out of" << node_count << endl;
 	}
-	
+
 	outfile.close();
-	cout << "Results saved as results.txt'" << endl;
+	    std::time_t end = std::time(0);   // get time now
+    std::tm* end_time = std::localtime(&end);
+    std::cout << "Done: " 
+              << end_time->tm_hour << ':' 
+              << end_time->tm_min << ":" 
+              << end_time->tm_sec 
+              << std::endl; 
+
+	// cout << "Results saved as results.txt'" << endl;
 
 	return 0;
 }
