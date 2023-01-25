@@ -8,10 +8,22 @@
 #include <algorithm> // max_element, std::min
 #include <utility> // pair
 #include <math.h> // ceil
-
+#include <sys/time.h>
 // for debugging only
 #define OBSERVED_NODE -1
 #define DEBUG 0
+
+#ifndef TIMING_H
+#define TIMING_H
+#define TIMER_DEF     struct timeval temp_1, temp_2
+
+#define TIMER_START   gettimeofday(&temp_1, (struct timezone*)0)
+
+#define TIMER_STOP    gettimeofday(&temp_2, (struct timezone*)0)
+
+#define TIMER_ELAPSED ((temp_2.tv_sec-temp_1.tv_sec)*1.e6+(temp_2.tv_usec-temp_1 .tv_usec))
+#endif
+
 
 typedef std::vector<size_t> size_t_vector;
 typedef std::vector<int> int_vector;
@@ -282,22 +294,23 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
     int blocks = atoi(argv[2]);
     int threads = atoi(argv[3]);
     int streamCount = atoi(argv[4]);
-
+    float ttime = 0.0;
+    TIMER_DEF;
     int_vector vertex_start, vertex_length, neighbors;
     set_vector neighbor_sets;
 
     //int ignore_weights = std::stoi(argv[2]);
 
     std::cout << "Evaluating file " << filename << std::endl;
-
+    
     int64_t duration;
-    int repetitions = 5;
+    int repetitions = 1;
 
     //reads graph
     read_graph(vertex_start, vertex_length, neighbors, neighbor_sets, filename, ' ', 1); //converts graph to a v-graph-like structure
 
     for (int rep = 0; rep < repetitions; rep++) {
-
+        TIMER_START;
         interval_tree intervals;
         int_vector pairs, pair_count, generating_chunks, chunk_size, path_vertex_one, cluster_start;
 
@@ -514,7 +527,8 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
             cudaDeviceSynchronize();
             check_error();
         }
-
+        TIMER_STOP;
+	ttime +=TIMER_ELAPSED;
         for (int i = 0; i < streamCount; i++) {
             cudaFree(input_sizes[i]);
             check_error();
@@ -538,21 +552,22 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
             results[start_vertex[i]] += normalized_sizes[i];
         }
 
-        // std::cout << "ExF computed" << std::endl;
+         std::cout << "ExF computed" << std::endl;
 
         auto end = std::chrono::high_resolution_clock::now();
         auto time = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
         duration += time;
+	
         if (rep == 0) {
-            for (size_t i = 0; i < results.size(); i++) {
-                std::cout << i << "  " << results[i] << std::endl;
-            }
+            //for (size_t i = 0; i < results.size(); i++) {
+                std::cout << 10 << "  " << results[10] << std::endl;
+            //}
         } 
         std::cout << time << std::endl;
     }
 
     // blocks,threads,streamCount,avg duration in microseconds
     std::cout << blocks << "," << threads << "," << streamCount << "," << duration/repetitions << std::endl;
-
+    printf("GPU processing in ms: time = %f\n", ttime/1000.0);
 	return 0;
 }
