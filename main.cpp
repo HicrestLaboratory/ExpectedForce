@@ -1,4 +1,16 @@
 #include "stdafx.h"
+#include <sys/time.h>
+#include <omp.h>
+#ifndef TIMING_H
+#define TIMING_H
+#define TIMER_DEF     struct timeval temp_1, temp_2
+
+#define TIMER_START   gettimeofday(&temp_1, (struct timezone*)0)
+
+#define TIMER_STOP    gettimeofday(&temp_2, (struct timezone*)0)
+
+#define TIMER_ELAPSED ((temp_2.tv_sec-temp_1.tv_sec)*1.e6+(temp_2.tv_usec-temp_1 .tv_usec))
+#endif
 
 using namespace std;
 
@@ -65,17 +77,22 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
 	cout << "Evaluating Expected Force for graph '" + filename + "'"<< endl;
 
 	double EXF;
+        TIMER_DEF;
+        float ttime = 0.0;
+        TIMER_START; 
 	for (int i = 0; i < node_count; i++) 
 	{
 		//calculates and prints on file the Expected Force for each node
 		EXF = exfcpp(egosVect, altersVect, i);
 		outfile << std::to_string(i) << "  " << std::to_string(EXF) << endl;
 		//notificate progress
-		cout << i + 1 << "out of" << node_count << endl;
+		//cout << i + 1 << "out of" << node_count << endl;
 	}
+        TIMER_STOP;
+	ttime +=TIMER_ELAPSED;
 	
 	outfile.close();
 	cout << "Results saved as " << out_name << endl;
-
+        cout << "CPU processing in ms: time = " << ttime/1000.0 << endl;
 	return 0;
 }

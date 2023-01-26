@@ -319,13 +319,13 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
         int highest_degree = *std::max_element(vertex_length.begin(), vertex_length.end());
 
         generate_pairs(pairs, pair_count, highest_degree);
-        std::cout << "Pair generated" << std::endl;
+        //std::cout << "Pair generated" << std::endl;
         split_into_generating_chunks(generating_chunks, vertex_length, pair_count, chunk_size, cluster_start, intervals, blocks, threads);
 
         int biggest_chunk = graph_summary.biggest_chunk;
         int most_neighbors = graph_summary.longest_neighbor_seq;
 
-        std::cout << "Allocating first pointers" << std::endl;
+        //std::cout << "Allocating first pointers" << std::endl;
 
         cudaStream_t streams[streamCount];
         std::vector<size_t*> index_pointers;
@@ -386,7 +386,7 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
         std::vector<int> start_vertex;
         std::vector<size_t> total_cluster_size(vertex_length.size(), 0);
 
-        std::cout << "Allocated" << std::endl;
+        //std::cout << "Allocated" << std::endl;
 
         for (int index = 0; index < generating_chunks.size(); index += 2 * streamCount) {
             int streamsUsed = std::min((int) (generating_chunks.size() / 2) - index/2, (int) streamCount);
