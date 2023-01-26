@@ -66,7 +66,18 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
 	string filename = argv[1];
 	int ignore_weights = stoi(argv[2]);
 	string out_name = argv[3];
+        int num_threads, thread_id;
 
+
+#pragma omp parallel private(thread_id)
+        {
+             num_threads = omp_get_num_threads();
+             thread_id = omp_get_thread_num();
+             if (thread_id == 0)
+	     {
+		     std::cout << "Using " << num_threads << " threads" << std::endl;
+	     }
+        }
 
 	//reads graph
 	int node_count = read_snap_format(egosVect, altersVect, filename, ' ', ignore_weights); //converts SNAP graph to sorted edgelist.
@@ -76,21 +87,25 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
 	outfile.open(out_name);
 	cout << "Evaluating Expected Force for graph '" + filename + "'"<< endl;
 
-	double EXF;
+	double *EXF = new double[node_count];
         TIMER_DEF;
         float ttime = 0.0;
         TIMER_START; 
+	int chunk_size = 2;
+#pragma omp parallel for schedule(dynamic, chunk_size)
 	for (int i = 0; i < node_count; i++) 
 	{
 		//calculates and prints on file the Expected Force for each node
-		EXF = exfcpp(egosVect, altersVect, i);
-		outfile << std::to_string(i) << "  " << std::to_string(EXF) << endl;
+		EXF[i] = exfcpp(egosVect, altersVect, i);
+		//outfile << std::to_string(i) << "  " << std::to_string(EXF) << endl;
 		//notificate progress
 		//cout << i + 1 << "out of" << node_count << endl;
 	}
         TIMER_STOP;
 	ttime +=TIMER_ELAPSED;
-	
+        for (int i = 0; i < node_count; i++){
+              outfile << std::to_string(i) << "  " << std::to_string(EXF[i]) << endl;
+	}	
 	outfile.close();
 	cout << "Results saved as " << out_name << endl;
         cout << "CPU processing in ms: time = " << ttime/1000.0 << endl;

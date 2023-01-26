@@ -6,5 +6,5 @@ compile: main.cpp exffunction.cpp stdafx.h
 	${CC} main.cpp exffunction.cpp -o ExpForce
 
 run_test: ExpForce
-	./ExpForce dataset/rmat_10_4.txt 1 /tmp/out.txt
+	./ExpForce dataset/viterbo.txt 1 /tmp/out.txt
 	
