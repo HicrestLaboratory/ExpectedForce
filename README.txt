@@ -1,4 +1,11 @@
-This is a repository created by Paolo Sylos Labini in order to test the Glenn Lawyer Expected Force algorithm on SNAP graphs in C++ .
+This is a repository created by Paolo Sylos Labini and Flavio Velle. 
+The code implement the Glenn Lawyer Expected Force algorithm on SNAP graphs in C++ and OpenMP.
+A GPU version is also available in ``parallel`` directory. 
+
+It provides:
+OpenMP implementation.
+CUDA ve
+
 exffunction.cpp copyright Glenn Lawyer, 2013.
 --------------------------------------------------------------
 
@@ -14,7 +21,7 @@ GENERAL USAGE
 Once compiled, an executable named ExpForce should appear. 
 Execute it with any number of filenames as arguments;
 
-example: ./ExpForce fb_full.txt , where fb_full.txt contains a full, sorted edgelists such as
+example: OMP_NUM_THREADS=16 ./ExpForce fb_full.txt 1 fb_exp.score.txt, where fb_full.txt contains a full, sorted edgelists such as
 0  2
 1  2
 2  0
