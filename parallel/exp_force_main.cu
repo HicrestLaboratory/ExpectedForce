@@ -308,7 +308,7 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
 
     //reads graph
     read_graph(vertex_start, vertex_length, neighbors, neighbor_sets, filename, ' ', 1); //converts graph to a v-graph-like structure
-
+    std::cout << "File Read" << std::endl;
     for (int rep = 0; rep < repetitions; rep++) {
         TIMER_START;
         interval_tree intervals;
@@ -319,13 +319,13 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
         int highest_degree = *std::max_element(vertex_length.begin(), vertex_length.end());
 
         generate_pairs(pairs, pair_count, highest_degree);
-
+        std::cout << "Pair generated" << std::endl;
         split_into_generating_chunks(generating_chunks, vertex_length, pair_count, chunk_size, cluster_start, intervals, blocks, threads);
 
         int biggest_chunk = graph_summary.biggest_chunk;
         int most_neighbors = graph_summary.longest_neighbor_seq;
 
-        // std::cout << "Allocating first pointers" << std::endl;
+        std::cout << "Allocating first pointers" << std::endl;
 
         cudaStream_t streams[streamCount];
         std::vector<size_t*> index_pointers;
@@ -386,7 +386,7 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
         std::vector<int> start_vertex;
         std::vector<size_t> total_cluster_size(vertex_length.size(), 0);
 
-        // std::cout << "Allocated" << std::endl;
+        std::cout << "Allocated" << std::endl;
 
         for (int index = 0; index < generating_chunks.size(); index += 2 * streamCount) {
             int streamsUsed = std::min((int) (generating_chunks.size() / 2) - index/2, (int) streamCount);
@@ -396,7 +396,6 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
                 int chunk_end = generating_chunks[chunk_index + 1];
                 size_t number_of_clusters = cluster_start[chunk_end] + pair_count[vertex_length[chunk_end]] - cluster_start[chunk_start];
                 int neighbor_size = vertex_start[chunk_end] + vertex_length[chunk_end] - vertex_start[chunk_start];
-
                 // std::cout << "Copying index pointers: " << sizeof(int) * intervals[index/2 + i].size() << std::endl;
                 cudaMemcpyAsync(index_pointers[i], intervals[index/2 + i].data(), sizeof(size_t) * intervals[index/2 + i].size(), cudaMemcpyHostToDevice);
                 check_error();
@@ -408,8 +407,10 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
                 // std::cout << "Copying neighbors" << std::endl;
                 cudaMemcpy(neighbor_pointers[i], neighbors.data() + vertex_start[chunk_start], sizeof(int) * neighbor_size, cudaMemcpyHostToDevice);
                 check_error();
-
-                // std::cout << "Blocks " << blocks << ", threads " << threads << ", i " << i << ", vertex count " << chunk_end - chunk_start + 1 << ", cluster count " << number_of_clusters << ", vertex offset " << chunk_start << ", neighbor offset " << vertex_start[chunk_start] << std::endl;
+                
+                //std::cout << "Blocks " << blocks << ", threads " << threads << ", i " << i << ", vertex count " << chunk_end - chunk_start + 1 << ", cluster count " << number_of_clusters << ", vertex offset " << chunk_start << ", neighbor offset " << vertex_start[chunk_start] << std::endl;
+		//int pt = std::floor(std::log2(chunk_end - chunk_start + 1));
+		//threads = std::pow(2,pt-1);
                 GeneratePairs<<<blocks, threads, 0, streams[i]>>>(index_pointers[i], neighbor_pointers[i], vertex_start_pointers[i], pairs_ptr, length_ptr, cluster_size_pointers[i], cluster_start_pointers[i], chunk_end - chunk_start + 1, number_of_clusters, chunk_start, vertex_start[chunk_start]);
                 //GeneratePairs<<<blocks, threads, 0, streams[i]>>>(index_pointers[i], neighbor_pointers[i], vertex_start_pointers[i], pairs.data(), vertex_length.data(), cluster_size_pointers[i], cluster_start_pointers[i], chunk_end - chunk_start + 1, number_of_clusters, chunk_start, vertex_start[chunk_start]);
                 cudaDeviceSynchronize();
@@ -559,15 +560,15 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
         duration += time;
 	
         if (rep == 0) {
-            //for (size_t i = 0; i < results.size(); i++) {
+      //      for (size_t i = 0; i < results.size(); i++) {
                 std::cout << 10 << "  " << results[10] << std::endl;
-            //}
+      //      }
         } 
         std::cout << time << std::endl;
     }
 
     // blocks,threads,streamCount,avg duration in microseconds
-    std::cout << blocks << "," << threads << "," << streamCount << "," << duration/repetitions << std::endl;
+    //std::cout << blocks << "," << threads << "," << streamCount << "," << duration/repetitions << std::endl;
     printf("GPU processing in ms: time = %f\n", ttime/1000.0);
 	return 0;
 }
