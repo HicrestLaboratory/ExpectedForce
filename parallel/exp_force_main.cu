@@ -41,8 +41,8 @@ struct graph_data_t {
 /**
  * Kernel for generating all paths of length 2 in the graph and calculating the cluster sizes.
  */
-__global__ void GeneratePairs(size_t* indexes, int* neighbors, int* vertex_start, int* pairs, int* vertex_length, int* cluster_sizes, int* cluster_starts, int vertex_count, size_t maxNum, int vertexOffset, int neighborOffset) {
-    int i = blockDim.x * blockIdx.x + threadIdx.x;
+__global__ void GeneratePairs(const size_t* __restrict__ indexes, const int* __restrict__ neighbors, const int* __restrict__ vertex_start, const int* __restrict__ pairs, const int* __restrict__ vertex_length, int* cluster_sizes, int* cluster_starts, int vertex_count, size_t maxNum, int vertexOffset, int neighborOffset) {
+    unsigned int i = blockDim.x * blockIdx.x + threadIdx.x;
 
     // if (i == 5 && vertexOffset == 99) {
     //     for (int j = 0; j< vertex_count; j++) {
@@ -61,9 +61,9 @@ __global__ void GeneratePairs(size_t* indexes, int* neighbors, int* vertex_start
     // }
 
     // search in an 'interval tree' to map onto correct vertex's combinations
-    int index = 0;
-    int array_start = 0;
-    int array_size = vertex_count - 1;
+    unsigned int index = 0;
+    unsigned int array_start = 0;
+    unsigned int array_size = vertex_count - 1;
     while (array_start <= array_size) {
         index = (array_start + array_size) / 2;
         if (indexes[index] == i || (indexes[index] < i && indexes[index + 1] > i) || (indexes[index] < i && index == vertex_count - 1)) {
@@ -85,20 +85,20 @@ __global__ void GeneratePairs(size_t* indexes, int* neighbors, int* vertex_start
     // if (i == 7346592 && vertexOffset == 99) {
     //     printf("Index: %d\n", index);
     // }
-    int pair_combination = i - indexes[index];
+    unsigned int pair_combination = i - indexes[index];
 
     // get neighbor indexes
-    int edge_one = pairs[2 * pair_combination];
-    int edge_two = pairs[2 * pair_combination + 1];
+    unsigned int edge_one = pairs[2 * pair_combination];
+    unsigned int edge_two = pairs[2 * pair_combination + 1];
     // if (i == 5) {
     //     printf("Neighbors: %d and %d\n", edge_one, edge_two);
     // }
     // get neighbors
-    int neighbor_one = neighbors[vertex_start[index] - neighborOffset + edge_one];
-    int neighbor_two = neighbors[vertex_start[index] - neighborOffset + edge_two];
+    unsigned int neighbor_one = neighbors[vertex_start[index] - neighborOffset + edge_one];
+    unsigned int neighbor_two = neighbors[vertex_start[index] - neighborOffset + edge_two];
 
-    int cluster_index = 3 * i;
-    int cluster_size = vertex_length[neighbor_one] + vertex_length[neighbor_two] + vertex_length[vertexOffset + index] - 4;
+    unsigned int cluster_index = 3 * i;
+    unsigned int cluster_size = vertex_length[neighbor_one] + vertex_length[neighbor_two] + vertex_length[vertexOffset + index] - 4;
     cluster_sizes[i] = cluster_size;
     // if (i == 5) {
     //     printf("Cluster size: %d\n", cluster_size);
@@ -112,7 +112,7 @@ __global__ void GeneratePairs(size_t* indexes, int* neighbors, int* vertex_start
 /**
  * Calculates the expected force for the cluster.
  */
-__global__ void CountClusterExpectedForce(int* cluster_size, int* cluster_start, size_t* total_vertex_size, float* output, size_t maxNum) {
+__global__ void CountClusterExpectedForce(const int* __restrict__ cluster_size, const int* __restrict__ cluster_start, const size_t* __restrict__ total_vertex_size, float* output, size_t maxNum) {
 
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i >= maxNum) {
