@@ -1,4 +1,4 @@
-This is a repository created by Paolo Sylos Labini and Flavio Velle. 
+This is a repository created by Andrej Jurco, Paolo Sylos Labini and Flavio Vella. 
 The code implement the Glenn Lawyer Expected Force algorithm on SNAP graphs in C++ and OpenMP.
 A GPU version is also available in ``parallel`` directory. 
 
