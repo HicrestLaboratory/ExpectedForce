@@ -1,8 +1,10 @@
 This is a repository created by Paolo Sylos Labini and Flavio Velle. 
-The code implement the Glenn Lawyer Expected Force algorithm on SNAP graphs in C++ .
+The code implement the Glenn Lawyer Expected Force algorithm on SNAP graphs in C++ and OpenMP.
+A GPU version is also available in ``parallel`` directory. 
 
 It provides:
-OpenMP version
+OpenMP implementation.
+CUDA ve
 
 exffunction.cpp copyright Glenn Lawyer, 2013.
 --------------------------------------------------------------
