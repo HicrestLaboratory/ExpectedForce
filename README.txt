@@ -4,7 +4,7 @@ A GPU version is also available in ``parallel`` directory.
 
 It provides:
 OpenMP implementation.
-CUDA ve
+CUDA version (see the code in the directory parallel )
 
 exffunction.cpp copyright Glenn Lawyer, 2013.
 --------------------------------------------------------------
