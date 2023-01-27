@@ -10,6 +10,8 @@ CUDAFLAGS= -std=c++11 -O2 --use_fast_math --ptxas-options=-v  -gencode=arch=comp
 default: exp_force_main.cu
 	$(NVCC) $(CUDAFLAGS) exp_force_main.cu  -o expected_force $(LIBDIRS) $(INCDIRS) $(LIBS) $(CXXFLAGS)
 
+opt: exp_force_main-opt.cu
+	$(NVCC) $(CUDAFLAGS) exp_force_main-opt.cu  -o expected_force_opt $(LIBDIRS) $(INCDIRS) $(LIBS) $(CXXFLAGS)
 
 clean: 
 	rm -rf expected_force *.o
