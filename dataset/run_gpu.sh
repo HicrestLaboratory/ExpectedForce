@@ -7,9 +7,9 @@ graph=$1
 echo "Run GPU"
 for b in 64 128 256 512
 do
-	for th in 64 128 256 512 1024
+	for th in 256 512 1024
 	do
-		for sc in 1
+		for sc in 1 2 4
 		do
 			echo =====================
 			echo `date`
