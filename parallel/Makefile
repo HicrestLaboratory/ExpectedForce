@@ -11,7 +11,7 @@ default: exp_force_main.cu
 	$(NVCC) $(CUDAFLAGS) exp_force_main.cu  -o expected_force $(LIBDIRS) $(INCDIRS) $(LIBS) $(CXXFLAGS)
 
 opt: exp_force_main-opt.cu
-	$(NVCC) $(CUDAFLAGS) exp_force_main-opt.cu  -o expected_force_opt $(LIBDIRS) $(INCDIRS) $(LIBS) $(CXXFLAGS)
+	$(NVCC) $(CUDAFLAGS) exp_force_main-opt.cu  -o expected_force_opt $(LIBDIRS) $(INCDIRS) $(LIBS) $(CXXFLAGS) -DASYNC
 
 clean: 
 	rm -rf expected_force *.o
