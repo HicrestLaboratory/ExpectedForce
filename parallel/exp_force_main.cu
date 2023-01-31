@@ -38,6 +38,9 @@ struct graph_data_t {
     size_t cluster_count;
 } graph_summary;
 
+
+using namespace std;
+
 /**
  * Kernel for generating all paths of length 2 in the graph and calculating the cluster sizes.
  */
@@ -560,8 +563,15 @@ int main(int argc, char* argv[]) { //takes a filename (es: fb_full) as input; pr
         duration += time;
 	
         if (rep == 0) {
+		ofstream outfile;
+		outfile.open(filename+".score");
+
+		for (int i = 0; i < results.size(); i++){
+	              outfile << std::to_string(i) << "  " << std::to_string(results[i]) << endl;
+		}
+		outfile.close();
       //      for (size_t i = 0; i < results.size(); i++) {
-                std::cout << 10 << "  " << results[10] << std::endl;
+      //          std::cout << 10 << "  " << results[10] << std::endl;
       //      }
         } 
         std::cout << time << std::endl;

@@ -5,7 +5,7 @@ graph=$1
 #echo 
 #./expected_force_serial ${graph} 1 out.txt
 echo "Run CPU"
-for th in 8 16 32 64
+for th in 64
 do
 	echo =====================
 	echo `date`
