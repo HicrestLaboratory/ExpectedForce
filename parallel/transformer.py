@@ -33,7 +33,7 @@ def transform(load, store, delimiter='\t'):
     nodes = dict()
     with open(load, 'r') as file:
         for line in file.readlines():
-            if len(line.strip()) == 0:
+            if len(line.strip()) == 0 or line.startswith('#'):
                 #empty newline 
                 continue
             
@@ -52,13 +52,27 @@ def transform(load, store, delimiter='\t'):
     # prints graph details
     max_deg = 0
     most_clusters = 0
+    total_clusters = 0
     total_edges = 0
     for key in nodes:
         size = len(nodes[key])
         total_edges += size
-        most_clusters = max(most_clusters, size * (size-1) / 2)
+        cluster_size = size * (size - 1) / 2
+        most_clusters = max(most_clusters, cluster_size)
+        total_clusters += cluster_size
         max_deg = max(max_deg, size)
-    print(f'{store}: {len(nodes)} vertices, {total_edges} edges, max degree {max_deg}, max clusters in a vertex: {most_clusters}\n')
+
+    # each cluster is counted 3 times, so we rescale the count.
+    total_clusters = total_clusters // 3
+    print(f'{store}: {len(nodes)} vertices, {total_edges} edges, max degree {max_deg}, total clusters {total_clusters}, max clusters in a vertex: {most_clusters}\n')
+
+
+if __name__ == '__main__':
+    import sys
+    src = sys.argv[1]
+    dst = sys.argv[2]
+
+    transform(src, dst, ' ')
 
 # example usage:         
 #transform('Amazon0302.txt', 'ready/Amazon0302.txt', ' ')
