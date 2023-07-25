@@ -4,7 +4,7 @@ The code implements algorithms for the calculation of the Expected Force metric 
 It contains:
 **original serial implementation (exffunction.cpp copyright Glenn Lawyer, 2013.)
 **OpenMP implementation.
-**CUDA GPU implementation (see the code in the directory ``parallel`` )
+**CUDA GPU implementation (our efficient algorithm, see the code in the directory ``parallel`` )
 
 --------------------------------------------------------------
 
