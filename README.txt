@@ -1,4 +1,4 @@
-This is a repository created by Andrej Jurco, Paolo Sylos Labini and Flavio Vella. 
+This repository was created by Andrej Jurco, Paolo Sylos Labini and Flavio Vella. 
 The code implements algorithms for the calculation of the Expected Force metric on SNAP graphs in C++ and OpenMP. 
 
 It contains:
@@ -36,3 +36,17 @@ main.cpp loads a graph from a text file and calculate the expected force of the 
 stdafx.h is an header for standard libraries and the exfccp function.
 
 fb_full.txt is a test graph. 
+
+
+**Reference**
+@INPROCEEDINGS{10495558,
+  author={Labini, Paolo Sylos and Jurco, Andrej and Ceccarello, Matteo and Guarino, Stefano and Mastrostefano, Enrico and Vella, Flavio},
+  booktitle={2024 32nd Euromicro International Conference on Parallel, Distributed and Network-Based Processing (PDP)}, 
+  title={Scaling Expected Force: Efficient Identification of Key Nodes in Network-Based Epidemic Models}, 
+  year={2024},
+  volume={},
+  number={},
+  pages={98-107},
+  keywords={Measurement;Epidemics;Force measurement;Scalability;Computational modeling;Force;Graphics processing units;Epidemic;SIR;Big Data;Expected Force;Graph Centrality;Network;Parallel Computing},
+  doi={10.1109/PDP62718.2024.00021}}
+
